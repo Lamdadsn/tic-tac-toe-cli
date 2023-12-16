@@ -62,6 +62,7 @@ class GameBoard():
             [3, 6, 9]
         ]
         self.ai_positions = []              # for when AI is using the board to play
+        self.preferred_positions = []       # use if AI already has 2 tiles of a winning combo
         self.score = 0                      # to keep track of AI's score
 
     def show_board(self, num, gamers):
@@ -114,6 +115,10 @@ class GameBoard():
                     if tally == 3:
                         players[0].score += 1
                         return 1                            # player 1 wins
+            if tally == 2:                                  # warn machine (AI) player of potential winning position  
+                for c in c_set:
+                    if c not in players[0].positions and c not in self.preferred_positions:
+                        self.preferred_positions.append(c)
             tally = 0
         if num == 2:                                        # check player 2
             tally = 0
@@ -133,7 +138,11 @@ class GameBoard():
                         tally += 1
                         if tally == 3:
                             self.score += 1
-                            return 'm'                        # machine (AI) wins
+                            return 'm'                      # machine (AI) wins
+                if tally == 2:                              # store potential winning position  
+                    for c in c_set:
+                        if c not in self.ai_positions and c not in self.preferred_positions:
+                            self.preferred_positions.append(c)
                 tally = 0
         for i in range(9):
             if board.positions[i] == ' ':
@@ -171,9 +180,16 @@ def ai_choice(positions):
     Returns int 1...9"""
     choice = 0
     print("AI's turn!")
+    if len(board.preferred_positions) > 0:      # check if AI close to a winning combo
+        for c in board.preferred_positions:
+            choice = c
+            if positions[choice-1] != ' ':      # if space already taken
+                choice = 0
+            else:
+                break
     while choice not in range(1, 10):
         choice = random.randint(1, 9)
-        if positions[choice-1] != ' ':      # if space already taken
+        if positions[choice-1] != ' ':          # if space already taken
             choice = 0
     os.system('clear')
     return choice
@@ -247,6 +263,7 @@ while still_playing:                                        # 'X' goes first in 
             for p in players:
                 p.positions.clear()
             board.ai_positions.clear()
+            board.preferred_positions.clear()
             board.positions.clear()
             for p in range(9):
                 board.positions.append(' ')
